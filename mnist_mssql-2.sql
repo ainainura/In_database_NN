@@ -1,14 +1,14 @@
--- creating a database first 
+-- creating a database first
 create database mnist_nn;
 
 -- connecting to a database
 use mnist_nn;
 
--- DO NOT NEED TO RUN THIS at first; run this only when you want to rerun the experiment(before rerunning the TrainNetwork procedure) 
--- since we need to initialize our weights again. 
--- so after dropping these tables, create them again and bulk insert data into those again. I have fixed values for the initial weights
--- in the txt files.  
--- do not drop training_data and training_labels tables because we never make changes to those tables. 
+-- DO NOT NEED TO RUN THIS at first; run this only when you want to rerun the experiment
+-- (before rerunning the TrainNetwork procedure) since we need to initialize our weights again. 
+-- So after dropping these tables, create them again and bulk insert data into those again. 
+-- I have fixed values for the initial weights in the txt files.  
+-- Do not drop training_data and training_labels tables because we never make changes to those tables. 
 DROP TABLE layer1_weights;
 DROP TABLE layer2_weights;
 DROP TABLE layer1_biases;
@@ -25,18 +25,18 @@ CREATE TABLE layer2_biases(RowIndex INT, ColumnIndex INT, CellValue DECIMAL(10,7
 
 -- inserting values into the tables from txt files
 -- weights are initialized using Xavier algorithm  
-BULK INSERT training_data FROM 'C:\Users\v-aiaina\Fall2017_Research_Aiko\New experiments and new data\training_data_mnist1.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); --- loaded!
-BULK INSERT training_data FROM 'C:\Users\v-aiaina\Fall2017_Research_Aiko\New experiments and new data\training_data_mnist2.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); --- loaded!
-BULK INSERT training_data FROM 'C:\Users\v-aiaina\Fall2017_Research_Aiko\New experiments and new data\training_data_mnist3.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); --- loaded! 
-BULK INSERT training_data FROM 'C:\Users\v-aiaina\Fall2017_Research_Aiko\New experiments and new data\training_data_mnist4.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); --- loaded!
-BULK INSERT training_data FROM 'C:\Users\v-aiaina\Fall2017_Research_Aiko\New experiments and new data\training_data_mnist5.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); --- loaded!
-BULK INSERT training_data FROM 'C:\Users\v-aiaina\Fall2017_Research_Aiko\New experiments and new data\training_data_mnist6.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); --- ! 
+BULK INSERT training_data FROM '~\training_data_mnist1.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); 
+BULK INSERT training_data FROM '~\training_data_mnist2.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); 
+BULK INSERT training_data FROM '~\training_data_mnist3.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); 
+BULK INSERT training_data FROM '~\training_data_mnist4.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); 
+BULK INSERT training_data FROM '~\training_data_mnist5.txt' WITH (fieldterminator = ',', rowterminator = '0x0a'); 
+BULK INSERT training_data FROM 'C~\training_data_mnist6.txt' WITH (fieldterminator = ',', rowterminator = '0x0a');
 
-bulk INSERT training_labels from 'C:/Users/v-aiaina/Downloads/training_labels_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
-bulk INSERT layer1_weights from 'C:/Users/v-aiaina/Downloads/layer1_weights_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
-bulk INSERT layer2_weights from 'C:/Users/v-aiaina/Downloads/layer2_weights_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
-bulk INSERT layer1_biases from 'C:/Users/v-aiaina/Downloads/layer1_biases_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
-bulk INSERT layer2_biases from 'C:/Users/v-aiaina/Downloads/layer2_biases_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT training_labels from '~/training_labels_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT layer1_weights from '~/layer1_weights_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT layer2_weights from '~/layer2_weights_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT layer1_biases from '~/layer1_biases_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT layer2_biases from '~/layer2_biases_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
 
 -- this is a table that holds only one value -> minimum cross entropy loss throughout all of the iterations in the training
 -- we update this value for the epoch that has loss value less than the min we've had so far. 
@@ -45,11 +45,11 @@ insert into min_loss_value values (0, 10000.0); -- initialize loss to a very lar
 
 -- just testing if data was loaded correctly 
 select count(*) from layer1_biases;  --         50 rows
-select count(*) from layer2_biases;  --         10
-select count(*) from layer2_weights; --        500
-select count(*) from layer1_weights; --     39 200 
-select count(*) from training_data;  -- 47 040 000 
-select count(*) from training_labels;--    600 000 
+select count(*) from layer2_biases;  --         10 rows
+select count(*) from layer2_weights; --        500 rows
+select count(*) from layer1_weights; --     39 200 rows
+select count(*) from training_data;  -- 47 040 000 rows
+select count(*) from training_labels;--    600 000 rows
 
 -- Training procedure! 
 -- Input data for this training procedure is called MNIST dataset. 
@@ -59,9 +59,11 @@ select count(*) from training_labels;--    600 000
 -- Step = learning rate value (used for updating weights) 
 -- The structure of the neural network trained here is the following:
 -- 1) it has three layers - input, hidden, output layer
--- 2) this is an implementation of the gradient descent algorithm - so we update weights once for the pass through the entire training dataset
--- 3) there are 784 nodes in the input layer (due to input data), 50 nodes in the hidden (chosen through some experiments), 10 nodes in the output
--- (because of the number of labels we need to predict) 
+-- 2) this is an implementation of the gradient descent algorithm: 
+      -- so we update weights once for the pass through the entire training dataset
+-- 3) there are 784 nodes in the input layer (due to input data), 
+      -- 50 nodes in the hidden (chosen through some experiments), 
+      -- 10 nodes in the output layer (because of the number of labels we need to predict). 
 IF OBJECT_ID (N'TrainNetwork', N'P') IS NOT NULL
     DROP PROCEDURE TrainNetwork;
 GO
@@ -71,12 +73,12 @@ BEGIN
     DECLARE @i INT
     SET @i = 1
 
-	-- So for now I am using a desired threshold value to stop the training procedure 
+	-- For now I am using a desired threshold value to stop the training procedure 
 	WHILE (select loss from min_loss_value) > @ThresholdError 
         BEGIN
         SET @i = @i + 1
 
-		-- dropping tables that are created in each iteration of the loop, store intermediate results
+	-- dropping tables that are created in each iteration of the loop, store intermediate results
         IF OBJECT_ID ('hidden_layer', 'U') IS NOT NULL
         DROP TABLE hidden_layer
         IF OBJECT_ID ('output_layer', 'U') IS NOT NULL
@@ -89,13 +91,15 @@ BEGIN
         DROP TABLE error_signal_hidden
 
         -- hidden_layer table contains values of tanh activation function as the output from the hidden layer
-		-- the nested code inside finds net value for the hidden layer and the outer part applies activation function to net value.
+		-- the nested code inside finds net value for the hidden layer and the outer part 
+		-- applies activation function to net value.
 		select * into hidden_layer from
         (SELECT input_layer.RowIndex, input_layer.ColumnIndex, 
         (exp(input_layer.net+layer1_biases.CellValue)-exp(-(input_layer.net+layer1_biases.CellValue)))/
         (exp(input_layer.net+layer1_biases.CellValue)+exp(-(input_layer.net+layer1_biases.CellValue))) AS tanh_output
         FROM 
-		(SELECT training_data.RowIndex, layer1_weights.ColumnIndex, sum(training_data.CellValue*layer1_weights.CellValue) AS net 
+		(SELECT training_data.RowIndex, layer1_weights.ColumnIndex, 
+		 sum(training_data.CellValue*layer1_weights.CellValue) AS net 
 		FROM training_data CROSS JOIN layer1_weights WHERE training_data.ColumnIndex = layer1_weights.RowIndex 
         GROUP BY training_data.RowIndex, layer1_weights.ColumnIndex) as input_layer, layer1_biases 
         WHERE input_layer.ColumnIndex = layer1_biases.ColumnIndex) AS t2;
@@ -103,11 +107,13 @@ BEGIN
 		--print 'done with hidden layer'; 
 
 		-- table output_layer contains net values for the last output layer, 
-		-- but without applying activation function yet (softmax activation should be applied to these in the next query)
+		-- but without applying activation function yet (softmax activation 
+		-- should be applied to these in the next query)
 		SELECT * INTO output_layer FROM 
         (SELECT t3.RowIndex, t3.ColumnIndex, t3.net2+layer2_biases.CellValue AS net2 FROM 
         layer2_biases,
-        (SELECT hidden_layer.RowIndex, layer2_weights.ColumnIndex, sum(hidden_layer.tanh_output*layer2_weights.CellValue) AS
+        (SELECT hidden_layer.RowIndex, layer2_weights.ColumnIndex, 
+	 sum(hidden_layer.tanh_output*layer2_weights.CellValue) AS
         net2 FROM
         hidden_layer CROSS JOIN layer2_weights WHERE hidden_layer.ColumnIndex = layer2_weights.RowIndex
         GROUP BY hidden_layer.RowIndex, layer2_weights.ColumnIndex) AS t3
@@ -115,7 +121,8 @@ BEGIN
 
 		--print 'done with output layer';
 
-		-- table output_probs contains output results for the last output layer, so results that come from applying softmax activation function
+		-- table output_probs contains output results for the last output layer, 
+		-- so results that come from applying softmax activation function
         SELECT * into output_probs from 
         (select output_layer.RowIndex, output_layer.ColumnIndex, 
         (exp(output_layer.net2)/t2.sum_exp) as softmax_output from output_layer, 
@@ -129,7 +136,8 @@ BEGIN
 		-- otherwise we do not update that value; 
 		update min_loss_value
 		set EpochNumber = @i, loss = case when loss > new_computed_loss THEN new_computed_loss ELSE loss end from 
-		(select sum(-training_labels.Class*LOG(softmax_output))/max(training_labels.RowIndex) as new_computed_loss from output_probs, training_labels
+		(select sum(-training_labels.Class*LOG(softmax_output))/max(training_labels.RowIndex) 
+			as new_computed_loss from output_probs, training_labels
         where training_labels.RowIndex = output_probs.RowIndex and training_labels.ColumnIndex = output_probs.ColumnIndex) as tt; 
 
 		--print 'done updating minlossvalue';
@@ -223,7 +231,8 @@ DECLARE @stepss INT
 SET @stepss = 3   -- this value was found during experiments, gives good accuracy
 DECLARE @threshold DECIMAL(10,5)
 SET @threshold = 0.130 -- this threshold value means that we want to reach accuracy around -log(0.130) = 0.88; i.e. 88%
--- we can definitely increase this threshold value if we want to have less # of epochs; after first epoch loss value goes down to 2.3
+-- we can definitely increase this threshold value if we want to have less # of epochs; 
+								-- after first epoch loss value goes down to 2.3
 EXEC TrainNetwork @threshold, @stepss
 GO
 
@@ -233,8 +242,8 @@ CREATE TABLE test_data(RowIndex INT, ColumnIndex INT, CellValue INT);
 CREATE TABLE test_labels(RowIndex INT, ColumnIndex INT, Class INT);
 
 -- insert values from txt files
-bulk INSERT test_data from 'C:/Users/v-aiaina/Downloads/test_data_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
-bulk INSERT test_labels from 'C:/Users/v-aiaina/Downloads/test_labels_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT test_data from '~/test_data_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
+bulk INSERT test_labels from '~/test_labels_mnist.txt' with (fieldterminator = ',', rowterminator = '0x0a');
 
 -- FORWARD PROPAGATION HAPPENS ONCE for test data based on weights computed in the trainnetwork procedure 
 -- this computes tanh output for hidden layer
