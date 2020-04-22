@@ -29,19 +29,33 @@ drop table dbo.min_loss_value;
 CREATE TABLE training_data(RowIndex INT, ColumnIndex INT, CellValue INT, 
 			   PRIMARY KEY NONCLUSTERED (RowIndex, ColumnIndex)) WITH (MEMORY_OPTIMIZED = ON, 
 										   DURABILITY = SCHEMA_AND_DATA); 
+						     
+ALTER TABLE training_data add index training_data_rowIndex HASH(RowIndex) with (bucket_count = 10000); 
+ALTER TABLE training_data add index training_data_colIndex HASH(ColumnIndex) with (bucket_count = 784);
+						     
 CREATE TABLE training_labels(RowIndex INT, ColumnIndex INT, Class INT, 
 			     PRIMARY KEY NONCLUSTERED (RowIndex, ColumnIndex)) WITH (MEMORY_OPTIMIZED = ON, 
 										     DURABILITY = SCHEMA_AND_DATA);
-CREATE TABLE layer1_weights(RowIndex INT, ColumnIndex INT, CellValue DECIMAL(10,7), 
+CREATE TABLE layer1_weights(RowIndex INT INDEX rowIndex_layer1 NONCLUSTERED HASH WITH (BUCKET_COUNT= 784), 
+			    ColumnIndex INT, CellValue DECIMAL(10,7), 
 			    PRIMARY KEY NONCLUSTERED (RowIndex, ColumnIndex)) WITH (MEMORY_OPTIMIZED = ON, 
 										    DURABILITY = SCHEMA_AND_DATA);
-CREATE TABLE layer2_weights(RowIndex INT, ColumnIndex INT, CellValue DECIMAL(10,7), 
+CREATE TABLE layer2_weights(RowIndex INT INDEX rowIndex_layer2 NONCLUSTERED HASH WITH (BUCKET_COUNT= 50), 
+			    ColumnIndex INT, CellValue DECIMAL(10,7), 
 			    PRIMARY KEY NONCLUSTERED (RowIndex, ColumnIndex)) WITH (MEMORY_OPTIMIZED = ON, 
 										    DURABILITY = SCHEMA_AND_DATA);
-CREATE TABLE layer1_biases(RowIndex INT, ColumnIndex INT, CellValue DECIMAL(10,7), 
+						      
+ALTER TABLE layer1_weights add index layer1_weights_colIndex HASH(ColumnIndex) with (bucket_count = 50); 
+ALTER TABLE layer2_weights add index layer2_weights_colIndex HASH(ColumnIndex) with (bucket_count = 10);
+						      
+CREATE TABLE layer1_biases(RowIndex INT, 
+			   ColumnIndex INT INDEX columnIndex_layer1_biases NONCLUSTERED HASH WITH (BUCKET_COUNT= 50), 
+			   CellValue DECIMAL(10,7), 
 			   PRIMARY KEY NONCLUSTERED (RowIndex, ColumnIndex)) WITH (MEMORY_OPTIMIZED = ON, 
 										   DURABILITY = SCHEMA_AND_DATA);
-CREATE TABLE layer2_biases(RowIndex INT, ColumnIndex INT, CellValue DECIMAL(10,7), 
+CREATE TABLE layer2_biases(RowIndex INT, 
+			   ColumnIndex INT INDEX columnIndex_layer2_biases NONCLUSTERED HASH WITH (BUCKET_COUNT= 10), 
+			   CellValue DECIMAL(10,7), 
 			   PRIMARY KEY NONCLUSTERED (RowIndex, ColumnIndex)) WITH (MEMORY_OPTIMIZED = ON, 
 										   DURABILITY = SCHEMA_AND_DATA);
 
