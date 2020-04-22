@@ -9,3 +9,5 @@ In this case, I'm considering neural networks algorithm (because of its populari
 I have two implementations: one is using regular tables, second - using hekaton tables, which are memory optimized tables (for those I'm also using natively compiled stored procedures in order to fully benefit from in-memory tables). 
 
 This is a really exploratory project.
+
+One of the datasets I've been using for experiments is MNIST dataset, a dataset of images of handwritten digits. 
